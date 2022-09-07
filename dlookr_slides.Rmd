@@ -1,0 +1,83 @@
+---
+title: "dlookr Package"
+subtitle: "WCM Computing Club - September 22, 2022"
+author: "Rachel Heise"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["xaringan-themer.css","extra.css"]
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    seal: false 
+---
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+library(fontawesome)
+library(kableExtra)
+library(dplyr)
+library(dlookr)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono")
+)
+```
+
+```{r, include = F}
+# This is the recommended set up for flipbooks
+# you might think about setting cache to TRUE as you gain practice --- building flipbooks from scratch can be time consuming
+knitr::opts_chunk$set(fig.width = 9, message = FALSE, warning = FALSE, comment = "", cache = T)
+library(flipbookr)
+library(tidyverse)
+library(rmarkdown)
+```
+
+layout: true
+background-image: url(img/dlookr_hex.png)
+background-size: 100px
+background-position: 90% 90%
+
+---
+
+name: xaringan-title
+class: left, middle
+background-image: url(img/white-abstract-background.jpg)
+background-size: cover
+
+<h1 style="color: gray;">Data diagnosis, exploration, and transformation with {dlookr}</h1>
+
+<img src="img/dlookr_hex.png" alt="dlookr-hex-sticker" width="180" />
+
+<h3 style="color: gray;">Rachel Heise | WCM Computing Club | September 22, 2022</h3>
+
+---
+
+# dlookr
+
+- Package for exploratory data analysis
+
+  - Data diagnosis
+  
+  - Exploration
+  
+  - Transformation
+  
+---
+
+
+# Advantages of dlookr
+
+- Seamless integration with `dplyr`
+
+- Use of `plot` and `summary` functions to quickly view diagnostic data
+
+- Simple and powerful commands
+  
+---
+

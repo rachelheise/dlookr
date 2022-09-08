@@ -36,6 +36,7 @@ knitr::opts_chunk$set(fig.width = 9, message = FALSE, warning = FALSE, comment =
 library(flipbookr)
 library(tidyverse)
 library(rmarkdown)
+library(data.table)
 ```
 
 layout: true
@@ -80,4 +81,321 @@ background-size: cover
 - Simple and powerful commands
   
 ---
+
+# Data
+.pull-left[
+- Use `iris` dataset...with some NAs added for complexity
+
+- `iris` variables
+
+  - Sepal Length (continuous, add NA)
+  
+  - Sepal Width (continuous)
+  
+  - Petal Length (continuous)
+  
+  - Petal Width (continuous)
+  
+  - Species (categorical, add NA)
+    
+]
+
+--
+
+.pull-right[
+```{r}
+data("iris")
+
+iris["Sepal.Length"] <- lapply(iris["Sepal.Length"], function(x) {x[sample( c(1:40), floor(40/10))] <- NA; x})
+iris["Species"] <- lapply(iris["Species"], function(x) {x[sample( c(1:35), floor(35/10))] <- NA; x})
+
+iris %>% data.table()
+```
+]
+
+---
+
+# Diagnose
+.pull-left[
+  - `diagnose` function describes:
+  
+    - the type of each variable
+    
+    - number & percent of missing data
+    
+    - unique data
+    
+  - Helps with basic data diagnostics: are unique counts what you expect, how much missingness is there, are data types correct
+
+]
+
+.pull-right[
+```{r}
+diagnose(iris)
+```
+]
+
+--
+
+```{r}
+iris %>% 
+  diagnose() %>% 
+  select(-unique_count, -unique_rate) %>% 
+  filter(missing_count > 0) %>% 
+  arrange(desc(missing_count))
+```
+
+---
+
+# Diagnose Continuous Variables
+.pull-left[
+```{r}
+diagnose_numeric(iris)
+
+diagnose_outlier(iris)
+```
+]
+--
+.pull-right[
+```{r}
+diagnose_outlier(iris) %>% 
+  filter(outliers_cnt > 0)
+
+iris %>% 
+  plot_outlier(diagnose_outlier(iris) %>% 
+               filter(outliers_ratio >= 0.5) %>% 
+               select(variables) %>% 
+               unlist())
+
+```
+]
+
+---
+
+# Diagnose Categorical Variables
+
+```{r}
+diagnose_category(iris)
+```
+
+```{r, eval=FALSE}
+diagnose_category(iris) %>% 
+  filter(is.na(levels))
+```
+
+---
+
+# Describe
+
+```{r}
+describe(iris)
+
+iris %>% 
+  describe() %>% 
+  select(described_variables, skewness, mean, p25, p50, p75) %>% 
+  filter(!is.na(skewness)) %>% 
+  arrange(desc(abs(skewness)))
+
+iris %>% 
+  group_by(Species) %>% 
+  describe(Sepal.Length, Sepal.Width)
+```
+
+---
+
+# Normality
+
+```{r}
+normality(iris)
+
+plot_normality(iris)
+```
+
+---
+# Correlation
+
+```{r}
+correlate(iris)
+
+iris %>% 
+  correlate() %>% 
+  plot()
+```
+
+---
+# Target Variables
+
+.pull-left[
+
+- Similar to `group_by()` in `dplyr`
+
+- Target variables are used to explore the relationship between a categorical variable and other variable values
+
+]
+
+.pull-right[
+
+```{r}
+categ <- target_by(iris, Species) # Species is the target variable
+cat_num <- relate(categ, Petal.Length) # petal length is the numerical variable of interest
+
+plot(cat_num)
+```
+
+]
+
+---
+# Imputation - continuous
+
+.pull-left[
+
+- Imputation methods for continuous variables include:
+
+  - mean
+  - median
+  - mode
+  - K-nearest neighbors (knn) 
+  - Recursive Partitioning and Regression Trees (rpart)
+  - Multivariate Imputation by Chained Equations (mice)
+  
+
+]
+
+.pull-right[
+```{r}
+sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Species, method = "knn")
+
+summary(sepallength_im)
+
+plot(sepallength_im)
+
+# add imputed variable to original data set
+
+iris_new <- cbind(iris, sepallength_im)
+```
+]
+---
+
+# Imputation - categorical 
+.pull-left[
+- Imputation for categorical variables include:
+
+  - mode
+  - Recursive Partitioning and Regression Trees (rpart)
+  - Multivariate Imputation by Chained Equations (mice)
+]
+
+.pull-right[
+
+```{r}
+library(mice)
+species_im <- imputate_na(iris, Species, method = "mice")
+
+plot(species_im)
+
+summary(species_im)
+iris_new <- cbind(iris, species_im)
+```
+
+]
+
+---
+# Imputation - outliers
+
+.pull-left[
+
+- Imputation methods for outliers
+
+  - mean
+  - median
+  - mode
+  - capping (imputes upper outliers at 95th percentile and lower outliers at 5th percentile)
+
+]
+
+.pull-right[
+```{r}
+iris_outliers <- imputate_outlier(iris, Sepal.Width, method="capping")
+iris_outliers
+summary(iris_outliers)
+plot(iris_outliers)
+```
+]
+
+---
+# Standardization and Skewness
+
+- `transform` function can both standardize (using z-score or minmax methods) and resolve skewness (via various transformations).
+
+```{r, warning=FALSE}
+hist(iris$Sepal.Length)
+
+# iris_t <- iris %>% 
+#   mutate(Sepal.Length_minmax = transform(Sepal.Length, method = "minmax"))
+  
+iris_t <- transform(iris$Sepal.Length, method = "minmax")
+
+plot(iris_t)
+
+```
+
+---
+# Find Skewness
+
+- `find_skewness` function identifies skewed variables. Use `index=FALSE` argument to return the names of the skewed variables.
+
+```{r}
+find_skewness(iris, index = FALSE)
+find_skewness(iris, value = TRUE)
+#filter on level of skewness
+find_skewness(iris, value = TRUE, thres = 0.3)
+```
+
+---
+# Binning
+
+- `binning` transforms a continuous variable into a categorical variable. It includes the following types of binning: quantile, equal, pretty (?), kmeans, and bclust.
+
+```{r}
+library()
+bin <- binning(iris$Petal.Length,
+               nbins = 4,
+               type = "kmeans",
+               labels = c("B1", "B2", "B3", "B4")) #default type is quantile
+bin
+
+summary(bin)
+plot(bin)
+
+# #extract binned results and save to df
+# iris_bins <- iris %>% 
+#   cbind(extract(bin))
+```
+
+
+
+```{css, eval = TRUE, echo = FALSE}
+.remark-code{line-height: 1.5; font-size: 60%}
+
+<!-- @media print { -->
+<!--   .has-continuation { -->
+<!--     display: block; -->
+<!--   } -->
+<!-- } -->
+
+<!-- code.r.hljs.remark-code{ -->
+<!--   position: relative; -->
+<!--   overflow-x: hidden; -->
+<!-- } -->
+
+
+<!-- code.r.hljs.remark-code:hover{ -->
+<!--   overflow-x:visible; -->
+<!--   width: 400px; -->
+<!-- } -->
+```
+
+
+
+
 

@@ -13,6 +13,8 @@ output:
       highlightLines: true
       countIncrementalSlides: false
     seal: false 
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r xaringan-themer, include=FALSE, warning=FALSE}
@@ -26,13 +28,15 @@ style_mono_accent(
   header_font_google = google_font("Josefin Sans"),
   text_font_google   = google_font("Montserrat", "300", "300i"),
   code_font_google   = google_font("Fira Mono")
-)
+  )
 ```
 
 ```{r, include = F}
 # This is the recommended set up for flipbooks
 # you might think about setting cache to TRUE as you gain practice --- building flipbooks from scratch can be time consuming
-knitr::opts_chunk$set(fig.width = 9, message = FALSE, warning = FALSE, comment = "", cache = T)
+knitr::opts_chunk$set(fig.width = 9, message = FALSE, warning = FALSE, comment = "", cache = F) #,
+                      # class.output = "pre")
+
 library(flipbookr)
 library(tidyverse)
 library(rmarkdown)
@@ -41,8 +45,8 @@ library(data.table)
 
 layout: true
 background-image: url(img/dlookr_hex.png)
-background-size: 100px
-background-position: 90% 90%
+background-size: 80px
+background-position: 95% 95%
 
 ---
 
@@ -129,14 +133,27 @@ iris %>% data.table()
 
 ]
 
+--
+
 .pull-right[
 ```{r}
 diagnose(iris)
 ```
 ]
 
---
+---
 
+# Diagnose
+
+.pull-left[
+
+- `diagnose` outputs a dataframe
+
+- This dataframe can be used with `dplyr` to perform any operations, including sorting and filtering
+
+]
+
+.pull-right[
 ```{r}
 iris %>% 
   diagnose() %>% 
@@ -144,84 +161,123 @@ iris %>%
   filter(missing_count > 0) %>% 
   arrange(desc(missing_count))
 ```
-
+]
 ---
 
 # Diagnose Continuous Variables
-.pull-left[
 ```{r}
 diagnose_numeric(iris)
+```
 
+--
+```{r}
 diagnose_outlier(iris)
 ```
-]
+
 --
-.pull-right[
 ```{r}
 diagnose_outlier(iris) %>% 
   filter(outliers_cnt > 0)
-
-iris %>% 
-  plot_outlier(diagnose_outlier(iris) %>% 
-               filter(outliers_ratio >= 0.5) %>% 
-               select(variables) %>% 
-               unlist())
-
 ```
-]
+
+---
+# Plot Outliers
+```{r, fig.height = 6, fig.width = 8}
+iris %>% 
+  plot_outlier(Sepal.Width)
+```
+
 
 ---
 
 # Diagnose Categorical Variables
 
+.pull-left[
+
+- `diagnose_category` is used to assess categorical variables including:
+
+  - levels of each categorical variable
+  - number of observations for each level
+  - percentage of observations at each level
+  - rank of each level of a categorical variable
+
+]
+--
+
+.pull-right[
 ```{r}
 diagnose_category(iris)
 ```
-
-```{r, eval=FALSE}
+]
+--
+.pull-right[
+```{r}
 diagnose_category(iris) %>% 
   filter(is.na(levels))
 ```
-
+]
 ---
 
 # Describe
 
+.pull-left[
+
+- Compute descriptive statistics for numerical data with `describe`
+
 ```{r}
 describe(iris)
+```
+]
 
-iris %>% 
-  describe() %>% 
-  select(described_variables, skewness, mean, p25, p50, p75) %>% 
-  filter(!is.na(skewness)) %>% 
-  arrange(desc(abs(skewness)))
 
+--
+
+.pull-right[
+
+- Use with `group_by()` from `dplyr` to assess descriptive statistics by a categorical variable
+
+
+```{r}
 iris %>% 
   group_by(Species) %>% 
-  describe(Sepal.Length, Sepal.Width)
+  describe(Sepal.Length)
 ```
+]
 
 ---
 
 # Normality
 
+.pull-left[
+
+- Assess normality of continuous variables and plot log and sqrt transformations
+
 ```{r}
 normality(iris)
-
-plot_normality(iris)
 ```
-
+]
+--
+.pull-right[
+```{r, fig.height=4, fig.width = 6}
+iris %>% 
+  plot_normality(Petal.Length)
+```
+]
 ---
 # Correlation
-
+.pull-left[
 ```{r}
 correlate(iris)
-
+```
+]
+--
+.pull-right[
+```{r, fig.width=5, fig.height=5}
 iris %>% 
   correlate() %>% 
   plot()
 ```
-
+]
 ---
 # Target Variables
 
@@ -232,10 +288,10 @@ iris %>%
 - Target variables are used to explore the relationship between a categorical variable and other variable values
 
 ]
-
+--
 .pull-right[
 
-```{r}
+```{r, fig.height=5, fig.width=6}
 categ <- target_by(iris, Species) # Species is the target variable
 cat_num <- relate(categ, Petal.Length) # petal length is the numerical variable of interest
 
@@ -260,13 +316,18 @@ plot(cat_num)
   
 
 ]
-
-.pull-right[
+---
+# Imputation - continuous
+.pull-left[
 ```{r}
 sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Species, method = "knn")
 
-summary(sepallength_im)
-
+x = summary(sepallength_im)
+```
+]
+--
+.pull-right[
+```{r, fig.height = 4, fig.width = 6}
 plot(sepallength_im)
 
 # add imputed variable to original data set
@@ -312,12 +373,18 @@ iris_new <- cbind(iris, species_im)
   - capping (imputes upper outliers at 95th percentile and lower outliers at 5th percentile)
 
 ]
-
-.pull-right[
+---
+# Imputation - outliers
+.pull-left[
 ```{r}
 iris_outliers <- imputate_outlier(iris, Sepal.Width, method="capping")
 iris_outliers
-summary(iris_outliers)
+```
+]
+--
+
+.pull-right[
+```{r, fig.height=4, fig.width=6}
 plot(iris_outliers)
 ```
 ]
@@ -325,74 +392,86 @@ plot(iris_outliers)
 ---
 # Standardization and Skewness
 
+.pull-left[
 - `transform` function can both standardize (using z-score or minmax methods) and resolve skewness (via various transformations).
+]
 
-```{r, warning=FALSE}
-hist(iris$Sepal.Length)
-
-# iris_t <- iris %>% 
-#   mutate(Sepal.Length_minmax = transform(Sepal.Length, method = "minmax"))
-  
+--
+.pull-right[
+```{r, warning=FALSE, fig.width=6, fig.height=4}
 iris_t <- transform(iris$Sepal.Length, method = "minmax")
 
 plot(iris_t)
-
 ```
-
+]
 ---
 # Find Skewness
-
+.pull-left[
 - `find_skewness` function identifies skewed variables. Use `index=FALSE` argument to return the names of the skewed variables.
-
+]
+--
+.pull-right[
 ```{r}
 find_skewness(iris, index = FALSE)
 find_skewness(iris, value = TRUE)
 #filter on level of skewness
 find_skewness(iris, value = TRUE, thres = 0.3)
 ```
-
+]
 ---
 # Binning
 
-- `binning` transforms a continuous variable into a categorical variable. It includes the following types of binning: quantile, equal, pretty (?), kmeans, and bclust.
+.pull-left[
+- `binning` transforms a continuous variable into a categorical variable.
 
+- It includes the following types of binning:
+
+  - quantile
+  - equal
+  - pretty (?)
+  - kmeans
+  - bclust
+]
+
+--
+
+.pull-right[
 ```{r}
-library()
 bin <- binning(iris$Petal.Length,
                nbins = 4,
                type = "kmeans",
                labels = c("B1", "B2", "B3", "B4")) #default type is quantile
 bin
-
-summary(bin)
-plot(bin)
-
-# #extract binned results and save to df
-# iris_bins <- iris %>% 
-#   cbind(extract(bin))
 ```
+]
+---
 
+# Binning plot
+.pull-left[
+```{r}
+summary(bin)
+```
+]
+
+.pull-right[
+```{r, fig.height = 5, fig.width=6}
+plot(bin)
+```
+]
 
 
 ```{css, eval = TRUE, echo = FALSE}
 .remark-code{line-height: 1.5; font-size: 60%}
 
-<!-- @media print { -->
-<!--   .has-continuation { -->
-<!--     display: block; -->
-<!--   } -->
-<!-- } -->
+pre {
+  max-width: 600px;
+  max-height: 300px;
+  overflow-x: auto;
+  overflow-y: scroll;
+  font-weight: 300;
+  font-style: initial;
+}
 
-<!-- code.r.hljs.remark-code{ -->
-<!--   position: relative; -->
-<!--   overflow-x: hidden; -->
-<!-- } -->
-
-
-<!-- code.r.hljs.remark-code:hover{ -->
-<!--   overflow-x:visible; -->
-<!--   width: 400px; -->
-<!-- } -->
 ```
 
 

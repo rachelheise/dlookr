@@ -4,7 +4,7 @@
     <title>dlookr Package</title>
     <meta charset="utf-8" />
     <meta name="author" content="Rachel Heise" />
-    <meta name="date" content="2022-09-08" />
+    <meta name="date" content="2022-09-15" />
     <script src="libs/header-attrs-2.15/header-attrs.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
     <link rel="stylesheet" href="extra.css" type="text/css" />
@@ -19,8 +19,8 @@
 
 layout: true
 background-image: url(img/dlookr_hex.png)
-background-size: 100px
-background-position: 90% 90%
+background-size: 80px
+background-position: 95% 95%
 
 ---
 
@@ -93,10 +93,10 @@ iris %&gt;% data.table()
 
 ```
      Sepal.Length Sepal.Width Petal.Length Petal.Width   Species
-  1:          5.1         3.5          1.4         0.2    setosa
+  1:           NA         3.5          1.4         0.2    setosa
   2:          4.9         3.0          1.4         0.2    setosa
   3:          4.7         3.2          1.3         0.2    setosa
-  4:          4.6         3.1          1.5         0.2      &lt;NA&gt;
+  4:          4.6         3.1          1.5         0.2    setosa
   5:          5.0         3.6          1.4         0.2    setosa
  ---                                                            
 146:          6.7         3.0          5.2         2.3 virginica
@@ -123,6 +123,8 @@ iris %&gt;% data.table()
 
 ]
 
+--
+
 .pull-right[
 
 ```r
@@ -141,8 +143,19 @@ diagnose(iris)
 ```
 ]
 
---
+---
 
+# Diagnose
+
+.pull-left[
+
+- `diagnose` outputs a dataframe
+
+- This dataframe can be used with `dplyr` to perform any operations, including sorting and filtering
+
+]
+
+.pull-right[
 
 ```r
 iris %&gt;% 
@@ -159,11 +172,10 @@ iris %&gt;%
 1 Sepal.Length numeric             4            2.67
 2 Species      factor              3            2   
 ```
-
+]
 ---
 
 # Diagnose Continuous Variables
-.pull-left[
 
 ```r
 diagnose_numeric(iris)
@@ -173,11 +185,13 @@ diagnose_numeric(iris)
 # A tibble: 4 × 10
   variables      min    Q1  mean median    Q3   max  zero minus outlier
   &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt;   &lt;int&gt;
-1 Sepal.Length   4.3   5.1  5.86   5.8    6.4   7.9     0     0       0
-2 Sepal.Width    2     2.8  3.06   3      3.3   4.4     0     0       4
-3 Petal.Length   1     1.6  3.76   4.35   5.1   6.9     0     0       0
-4 Petal.Width    0.1   0.3  1.20   1.3    1.8   2.5     0     0       0
+1 Sepal.Length   4.3  5.12  5.87   5.8    6.4   7.9     0     0       0
+2 Sepal.Width    2    2.8   3.06   3      3.3   4.4     0     0       4
+3 Petal.Length   1    1.6   3.76   4.35   5.1   6.9     0     0       0
+4 Petal.Width    0.1  0.3   1.20   1.3    1.8   2.5     0     0       0
 ```
+
+--
 
 ```r
 diagnose_outlier(iris)
@@ -185,14 +199,13 @@ diagnose_outlier(iris)
 
 ```
      variables outliers_cnt outliers_ratio outliers_mean with_mean without_mean
-1 Sepal.Length            0       0.000000           NaN  5.856849     5.856849
+1 Sepal.Length            0       0.000000           NaN  5.869178     5.869178
 2  Sepal.Width            4       2.666667         3.675  3.057333     3.040411
 3 Petal.Length            0       0.000000           NaN  3.758000     3.758000
 4  Petal.Width            0       0.000000           NaN  1.199333     1.199333
 ```
-]
+
 --
-.pull-right[
 
 ```r
 diagnose_outlier(iris) %&gt;% 
@@ -204,21 +217,34 @@ diagnose_outlier(iris) %&gt;%
 1 Sepal.Width            4       2.666667         3.675  3.057333     3.040411
 ```
 
+---
+# Plot Outliers
+
 ```r
 iris %&gt;% 
-  plot_outlier(diagnose_outlier(iris) %&gt;% 
-               filter(outliers_ratio &gt;= 0.5) %&gt;% 
-               select(variables) %&gt;% 
-               unlist())
+  plot_outlier(Sepal.Width)
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
-]
+![](dlookr_slides_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
 
 ---
 
 # Diagnose Categorical Variables
 
+.pull-left[
+
+- `diagnose_category` is used to assess categorical variables including:
+
+  - levels of each categorical variable
+  - number of observations for each level
+  - percentage of observations at each level
+  - rank of each level of a categorical variable
+
+]
+--
+
+.pull-right[
 
 ```r
 diagnose_category(iris)
@@ -233,16 +259,29 @@ diagnose_category(iris)
 3 Species   setosa       150    47  31.3     3
 4 Species   &lt;NA&gt;         150     3   2       4
 ```
-
+]
+--
+.pull-right[
 
 ```r
 diagnose_category(iris) %&gt;% 
   filter(is.na(levels))
 ```
 
+```
+# A tibble: 1 × 6
+  variables levels     N  freq ratio  rank
+  &lt;chr&gt;     &lt;chr&gt;  &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;int&gt;
+1 Species   &lt;NA&gt;     150     3     2     4
+```
+]
 ---
 
 # Describe
+
+.pull-left[
+
+- Compute descriptive statistics for numerical data with `describe`
 
 
 ```r
@@ -253,60 +292,53 @@ describe(iris)
 # A tibble: 4 × 26
   described_varia…     n    na  mean    sd se_mean   IQR skewness kurtosis   p00
   &lt;chr&gt;            &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
-1 Sepal.Length       146     4  5.86 0.834  0.0690   1.3    0.278   -0.586   4.3
-2 Sepal.Width        150     0  3.06 0.436  0.0356   0.5    0.319    0.228   2  
-3 Petal.Length       150     0  3.76 1.77   0.144    3.5   -0.275   -1.40    1  
-4 Petal.Width        150     0  1.20 0.762  0.0622   1.5   -0.103   -1.34    0.1
+1 Sepal.Length       146     4  5.87 0.824  0.0682  1.28    0.277   -0.526   4.3
+2 Sepal.Width        150     0  3.06 0.436  0.0356  0.5     0.319    0.228   2  
+3 Petal.Length       150     0  3.76 1.77   0.144   3.5    -0.275   -1.40    1  
+4 Petal.Width        150     0  1.20 0.762  0.0622  1.5    -0.103   -1.34    0.1
 # … with 16 more variables: p01 &lt;dbl&gt;, p05 &lt;dbl&gt;, p10 &lt;dbl&gt;, p20 &lt;dbl&gt;,
 #   p25 &lt;dbl&gt;, p30 &lt;dbl&gt;, p40 &lt;dbl&gt;, p50 &lt;dbl&gt;, p60 &lt;dbl&gt;, p70 &lt;dbl&gt;,
 #   p75 &lt;dbl&gt;, p80 &lt;dbl&gt;, p90 &lt;dbl&gt;, p95 &lt;dbl&gt;, p99 &lt;dbl&gt;, p100 &lt;dbl&gt;
 ```
+]
 
-```r
-iris %&gt;% 
-  describe() %&gt;% 
-  select(described_variables, skewness, mean, p25, p50, p75) %&gt;% 
-  filter(!is.na(skewness)) %&gt;% 
-  arrange(desc(abs(skewness)))
-```
 
-```
-# A tibble: 4 × 6
-  described_variables skewness  mean   p25   p50   p75
-  &lt;chr&gt;                  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1 Sepal.Width            0.319  3.06   2.8  3      3.3
-2 Sepal.Length           0.278  5.86   5.1  5.8    6.4
-3 Petal.Length          -0.275  3.76   1.6  4.35   5.1
-4 Petal.Width           -0.103  1.20   0.3  1.3    1.8
-```
+--
+
+.pull-right[
+
+- Use with `group_by()` from `dplyr` to assess descriptive statistics by a categorical variable
+
+
 
 ```r
 iris %&gt;% 
   group_by(Species) %&gt;% 
-  describe(Sepal.Length, Sepal.Width)
+  describe(Sepal.Length)
 ```
 
 ```
-# A tibble: 8 × 27
-  described_variables Species        n    na  mean    sd se_mean   IQR skewness
-  &lt;chr&gt;               &lt;fct&gt;      &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
-1 Sepal.Length        setosa        44     3  5    0.330  0.0497 0.400  0.199  
-2 Sepal.Length        versicolor    50     0  5.94 0.516  0.0730 0.7    0.105  
-3 Sepal.Length        virginica     50     0  6.59 0.636  0.0899 0.675  0.118  
-4 Sepal.Length        &lt;NA&gt;           2     1  4.45 0.212  0.150  0.150 NA      
-5 Sepal.Width         setosa        47     0  3.44 0.381  0.0555 0.45  -0.00292
-6 Sepal.Width         versicolor    50     0  2.77 0.314  0.0444 0.475 -0.363  
-7 Sepal.Width         virginica     50     0  2.97 0.322  0.0456 0.375  0.366  
-8 Sepal.Width         &lt;NA&gt;           3     0  3.27 0.379  0.219  0.350  1.60   
+# A tibble: 4 × 27
+  described_variables Species        n    na  mean    sd se_mean   IQR  skewness
+  &lt;chr&gt;               &lt;fct&gt;      &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;
+1 Sepal.Length        setosa        43     4  4.99 0.355  0.0542 0.45   -9.05e-5
+2 Sepal.Length        versicolor    50     0  5.94 0.516  0.0730 0.7     1.05e-1
+3 Sepal.Length        virginica     50     0  6.59 0.636  0.0899 0.675   1.18e-1
+4 Sepal.Length        &lt;NA&gt;           3     0  5.37 0.379  0.219  0.350   1.60e+0
 # … with 18 more variables: kurtosis &lt;dbl&gt;, p00 &lt;dbl&gt;, p01 &lt;dbl&gt;, p05 &lt;dbl&gt;,
 #   p10 &lt;dbl&gt;, p20 &lt;dbl&gt;, p25 &lt;dbl&gt;, p30 &lt;dbl&gt;, p40 &lt;dbl&gt;, p50 &lt;dbl&gt;,
 #   p60 &lt;dbl&gt;, p70 &lt;dbl&gt;, p75 &lt;dbl&gt;, p80 &lt;dbl&gt;, p90 &lt;dbl&gt;, p95 &lt;dbl&gt;,
 #   p99 &lt;dbl&gt;, p100 &lt;dbl&gt;
 ```
+]
 
 ---
 
 # Normality
+
+.pull-left[
+
+- Assess normality of continuous variables and plot log and sqrt transformations
 
 
 ```r
@@ -317,21 +349,25 @@ normality(iris)
 # A tibble: 4 × 4
   vars         statistic  p_value sample
   &lt;chr&gt;            &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
-1 Sepal.Length     0.977 1.45e- 2    150
+1 Sepal.Length     0.980 2.81e- 2    150
 2 Sepal.Width      0.985 1.01e- 1    150
 3 Petal.Length     0.876 7.41e-10    150
 4 Petal.Width      0.902 1.68e- 8    150
 ```
+]
+--
+.pull-right[
 
 ```r
-plot_normality(iris)
+iris %&gt;% 
+  plot_normality(Petal.Length)
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;![](dlookr_slides_files/figure-html/unnamed-chunk-10-2.png)&lt;!-- --&gt;![](dlookr_slides_files/figure-html/unnamed-chunk-10-3.png)&lt;!-- --&gt;![](dlookr_slides_files/figure-html/unnamed-chunk-10-4.png)&lt;!-- --&gt;
-
+![](dlookr_slides_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+]
 ---
 # Correlation
-
+.pull-left[
 
 ```r
 correlate(iris)
@@ -341,19 +377,22 @@ correlate(iris)
 # A tibble: 12 × 3
    var1         var2         coef_corr
    &lt;fct&gt;        &lt;fct&gt;            &lt;dbl&gt;
- 1 Sepal.Width  Sepal.Length    -0.104
- 2 Petal.Length Sepal.Length     0.877
- 3 Petal.Width  Sepal.Length     0.819
- 4 Sepal.Length Sepal.Width     -0.104
+ 1 Sepal.Width  Sepal.Length    -0.105
+ 2 Petal.Length Sepal.Length     0.867
+ 3 Petal.Width  Sepal.Length     0.811
+ 4 Sepal.Length Sepal.Width     -0.105
  5 Petal.Length Sepal.Width     -0.428
  6 Petal.Width  Sepal.Width     -0.366
- 7 Sepal.Length Petal.Length     0.877
+ 7 Sepal.Length Petal.Length     0.867
  8 Sepal.Width  Petal.Length    -0.428
  9 Petal.Width  Petal.Length     0.963
-10 Sepal.Length Petal.Width      0.819
+10 Sepal.Length Petal.Width      0.811
 11 Sepal.Width  Petal.Width     -0.366
 12 Petal.Length Petal.Width      0.963
 ```
+]
+--
+.pull-right[
 
 ```r
 iris %&gt;% 
@@ -361,8 +400,8 @@ iris %&gt;%
   plot()
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
-
+![](dlookr_slides_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+]
 ---
 # Target Variables
 
@@ -373,7 +412,7 @@ iris %&gt;%
 - Target variables are used to explore the relationship between a categorical variable and other variable values
 
 ]
-
+--
 .pull-right[
 
 
@@ -384,7 +423,7 @@ cat_num &lt;- relate(categ, Petal.Length) # petal length is the numerical variab
 plot(cat_num)
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+![](dlookr_slides_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
 
 ]
 
@@ -404,13 +443,14 @@ plot(cat_num)
   
 
 ]
-
-.pull-right[
+---
+# Imputation - continuous
+.pull-left[
 
 ```r
 sepallength_im &lt;- imputate_na(iris, Sepal.Length, yvar = Species, method = "knn")
 
-summary(sepallength_im)
+x = summary(sepallength_im)
 ```
 
 ```
@@ -422,20 +462,20 @@ summary(sepallength_im)
 described_variables "value"      "value"     
 n                   "146"        "150"       
 na                  "4"          "0"         
-mean                "5.856849"   "5.837827"  
-sd                  "0.8341758"  "0.8313497" 
-se_mean             "0.06903688" "0.06787942"
-IQR                 "1.3"        "1.3"       
-skewness            "0.2777875"  "0.3229473" 
-kurtosis            "-0.5859220" "-0.5740552"
+mean                "5.869178"   "5.843007"  
+sd                  "0.8239991"  "0.8287494" 
+se_mean             "0.06819465" "0.06766710"
+IQR                 "1.275"      "1.300"     
+skewness            "0.2771148"  "0.3110547" 
+kurtosis            "-0.5263032" "-0.5506961"
 p00                 "4.3"        "4.3"       
 p01                 "4.4"        "4.4"       
 p05                 "4.6"        "4.6"       
-p10                 "4.8"        "4.8"       
-p20                 "5"          "5"         
-p25                 "5.1"        "5.1"       
-p30                 "5.35"       "5.20"      
-p40                 "5.60"       "5.56"      
+p10                 "4.9"        "4.8"       
+p20                 "5.1"        "5.0"       
+p25                 "5.125"      "5.100"     
+p30                 "5.40"       "5.27"      
+p40                 "5.6"        "5.6"       
 p50                 "5.8"        "5.8"       
 p60                 "6.1"        "6.1"       
 p70                 "6.3"        "6.3"       
@@ -446,12 +486,15 @@ p95                 "7.275"      "7.255"
 p99                 "7.7"        "7.7"       
 p100                "7.9"        "7.9"       
 ```
+]
+--
+.pull-right[
 
 ```r
 plot(sepallength_im)
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+![](dlookr_slides_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
 
 ```r
 # add imputed variable to original data set
@@ -512,7 +555,7 @@ species_im &lt;- imputate_na(iris, Species, method = "mice")
 plot(species_im)
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+![](dlookr_slides_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
 
 ```r
 summary(species_im)
@@ -521,7 +564,7 @@ summary(species_im)
 ```
 * Impute missing values based on Multivariate Imputation by Chained Equations
  - method : mice
- - random seed : 87322
+ - random seed : 96165
 
 * Information of Imputation (before vs after)
            original imputation original_percent imputation_percent
@@ -550,8 +593,9 @@ iris_new &lt;- cbind(iris, species_im)
   - capping (imputes upper outliers at 95th percentile and lower outliers at 5th percentile)
 
 ]
-
-.pull-right[
+---
+# Imputation - outliers
+.pull-left[
 
 ```r
 iris_outliers &lt;- imputate_outlier(iris, Sepal.Width, method="capping")
@@ -589,79 +633,43 @@ attr(,"success")
 attr(,"class")
 [1] "imputation" "numeric"   
 ```
+]
+--
 
-```r
-summary(iris_outliers)
-```
-
-```
-Impute outliers with capping
-
-* Information of Imputation (before vs after)
-                    Original     Imputation  
-described_variables "value"      "value"     
-n                   "150"        "150"       
-na                  "0"          "0"         
-mean                "3.057333"   "3.050967"  
-sd                  "0.4358663"  "0.4108379" 
-se_mean             "0.03558833" "0.03354478"
-IQR                 "0.5"        "0.5"       
-skewness            "0.3189657"  "0.1340705" 
-kurtosis            " 0.2282490" "-0.4114289"
-p00                 "2.0"        "2.2"       
-p01                 "2.2"        "2.2"       
-p05                 "2.34500"    "2.36975"   
-p10                 "2.5"        "2.5"       
-p20                 "2.7"        "2.7"       
-p25                 "2.8"        "2.8"       
-p30                 "2.8"        "2.8"       
-p40                 "3"          "3"         
-p50                 "3"          "3"         
-p60                 "3.1"        "3.1"       
-p70                 "3.2"        "3.2"       
-p75                 "3.3"        "3.3"       
-p80                 "3.4"        "3.4"       
-p90                 "3.61"       "3.61"      
-p95                 "3.8"        "3.8"       
-p99                 "4.151"      "3.900"     
-p100                "4.4"        "4.0"       
-```
+.pull-right[
 
 ```r
 plot(iris_outliers)
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+![](dlookr_slides_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
 ]
 
 ---
 # Standardization and Skewness
 
+.pull-left[
 - `transform` function can both standardize (using z-score or minmax methods) and resolve skewness (via various transformations).
+]
 
-
-```r
-hist(iris$Sepal.Length)
-```
-
-![](dlookr_slides_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+--
+.pull-right[
 
 ```r
-# iris_t &lt;- iris %&gt;% 
-#   mutate(Sepal.Length_minmax = transform(Sepal.Length, method = "minmax"))
-  
 iris_t &lt;- transform(iris$Sepal.Length, method = "minmax")
 
 plot(iris_t)
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-16-2.png)&lt;!-- --&gt;
-
+![](dlookr_slides_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+]
 ---
 # Find Skewness
-
+.pull-left[
 - `find_skewness` function identifies skewed variables. Use `index=FALSE` argument to return the names of the skewed variables.
-
+]
+--
+.pull-right[
 
 ```r
 find_skewness(iris, index = FALSE)
@@ -677,7 +685,7 @@ find_skewness(iris, value = TRUE)
 
 ```
 Sepal.Length  Sepal.Width Petal.Length  Petal.Width 
-       0.275        0.316       -0.272       -0.102 
+       0.274        0.316       -0.272       -0.102 
 ```
 
 ```r
@@ -689,15 +697,27 @@ find_skewness(iris, value = TRUE, thres = 0.3)
 Sepal.Width 
       0.316 
 ```
-
+]
 ---
 # Binning
 
-- `binning` transforms a continuous variable into a categorical variable. It includes the following types of binning: quantile, equal, pretty (?), kmeans, and bclust.
+.pull-left[
+- `binning` transforms a continuous variable into a categorical variable.
 
+- It includes the following types of binning:
+
+  - quantile
+  - equal
+  - pretty (?)
+  - kmeans
+  - bclust
+]
+
+--
+
+.pull-right[
 
 ```r
-library()
 bin &lt;- binning(iris$Petal.Length,
                nbins = 4,
                type = "kmeans",
@@ -710,54 +730,49 @@ binned type: kmeans
 number of bins: 4
 x
 B1 B2 B3 B4 
-50 40 41 19 
+44  7 57 42 
 ```
+]
+---
+
+# Binning plot
+.pull-left[
 
 ```r
 summary(bin)
 ```
 
 ```
-  levels freq      rate
-1     B1   50 0.3333333
-2     B2   40 0.2666667
-3     B3   41 0.2733333
-4     B4   19 0.1266667
+  levels freq       rate
+1     B1   44 0.29333333
+2     B2    7 0.04666667
+3     B3   57 0.38000000
+4     B4   42 0.28000000
 ```
+]
+
+.pull-right[
 
 ```r
 plot(bin)
 ```
 
-![](dlookr_slides_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
-
-```r
-# #extract binned results and save to df
-# iris_bins &lt;- iris %&gt;% 
-#   cbind(extract(bin))
-```
-
+![](dlookr_slides_files/figure-html/unnamed-chunk-27-1.png)&lt;!-- --&gt;
+]
 
 
 &lt;style type="text/css"&gt;
 .remark-code{line-height: 1.5; font-size: 60%}
 
-&lt;!-- @media print { --&gt;
-&lt;!--   .has-continuation { --&gt;
-&lt;!--     display: block; --&gt;
-&lt;!--   } --&gt;
-&lt;!-- } --&gt;
+pre {
+  max-width: 600px;
+  max-height: 300px;
+  overflow-x: auto;
+  overflow-y: scroll;
+  font-weight: 300;
+  font-style: initial;
+}
 
-&lt;!-- code.r.hljs.remark-code{ --&gt;
-&lt;!--   position: relative; --&gt;
-&lt;!--   overflow-x: hidden; --&gt;
-&lt;!-- } --&gt;
-
-
-&lt;!-- code.r.hljs.remark-code:hover{ --&gt;
-&lt;!--   overflow-x:visible; --&gt;
-&lt;!--   width: 400px; --&gt;
-&lt;!-- } --&gt;
 &lt;/style&gt;
 
 

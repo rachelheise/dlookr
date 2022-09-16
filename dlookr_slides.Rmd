@@ -152,6 +152,8 @@ diagnose(iris)
 - This dataframe can be used with `dplyr` to perform any operations, including sorting and filtering
 
 ]
+--
+
 
 .pull-right[
 ```{r}
@@ -182,7 +184,7 @@ diagnose_outlier(iris) %>%
 
 ---
 # Plot Outliers
-```{r, fig.height = 6, fig.width = 8}
+```{r, fig.height = 5.5, fig.width = 8}
 iris %>% 
   plot_outlier(Sepal.Width)
 ```
@@ -194,12 +196,11 @@ iris %>%
 
 .pull-left[
 
-- `diagnose_category` is used to assess categorical variables including:
+- `diagnose_category` is used to assess categorical variables by:
 
-  - levels of each categorical variable
-  - number of observations for each level
-  - percentage of observations at each level
-  - rank of each level of a categorical variable
+  - Identifying the levels of each categorical variable
+  - Noting the number & percentage of observations at each level
+  - Ranking each level in terms of number of observations
 
 ]
 --
@@ -250,7 +251,9 @@ iris %>%
 
 .pull-left[
 
-- Assess normality of continuous variables and plot log and sqrt transformations
+- Assess normality of continuous variables and plot log and sqrt transformations with `normality` function
+
+  - Shapiro-Wilk test is used to generate p-values
 
 ```{r}
 normality(iris)
@@ -266,6 +269,11 @@ iris %>%
 ---
 # Correlation
 .pull-left[
+
+- `correlate` function assesses the correlation between all continuous variables
+
+- Plotting the output of this function generates a correlation plot
+
 ```{r}
 correlate(iris)
 ```
@@ -283,9 +291,11 @@ iris %>%
 
 .pull-left[
 
-- Similar to `group_by()` in `dplyr`
+- Target variables are similar to `group_by()` in `dplyr`
 
 - Target variables are used to explore the relationship between a categorical variable and other variable values
+
+  - `target_by` function
 
 ]
 --
@@ -316,23 +326,38 @@ plot(cat_num)
   
 
 ]
+--
+.pull-right[
+```{r}
+sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Species, method = "knn")
+summary(sepallength_im)
+```
+]
 ---
 # Imputation - continuous
 .pull-left[
-```{r}
-sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Species, method = "knn")
 
-x = summary(sepallength_im)
-```
+- Imputation methods for continuous variables include:
+
+  - mean
+  - median
+  - mode
+  - K-nearest neighbors (knn) 
+  - Recursive Partitioning and Regression Trees (rpart)
+  - Multivariate Imputation by Chained Equations (mice)
+  
+
 ]
---
+
 .pull-right[
+
+```{r, eval=FALSE}
+sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Species, method = "knn")
+```
+
+
 ```{r, fig.height = 4, fig.width = 6}
 plot(sepallength_im)
-
-# add imputed variable to original data set
-
-iris_new <- cbind(iris, sepallength_im)
 ```
 ]
 ---
@@ -340,24 +365,25 @@ iris_new <- cbind(iris, sepallength_im)
 # Imputation - categorical 
 .pull-left[
 - Imputation for categorical variables include:
-
   - mode
   - Recursive Partitioning and Regression Trees (rpart)
   - Multivariate Imputation by Chained Equations (mice)
-]
 
-.pull-right[
-
-```{r}
+```{r, results=FALSE}
 library(mice)
 species_im <- imputate_na(iris, Species, method = "mice")
-
-plot(species_im)
-
-summary(species_im)
-iris_new <- cbind(iris, species_im)
 ```
 
+```{r}
+summary(species_im)
+```
+
+]
+--
+.pull-right[
+```{r, fig.height=5, fig.width=6}
+plot(species_im)
+```
 ]
 
 ---
@@ -365,20 +391,15 @@ iris_new <- cbind(iris, species_im)
 
 .pull-left[
 
-- Imputation methods for outliers
-
+- Imputation methods for outliers:
   - mean
   - median
   - mode
   - capping (imputes upper outliers at 95th percentile and lower outliers at 5th percentile)
 
-]
----
-# Imputation - outliers
-.pull-left[
 ```{r}
 iris_outliers <- imputate_outlier(iris, Sepal.Width, method="capping")
-iris_outliers
+summary(iris_outliers)
 ```
 ]
 --
@@ -446,13 +467,13 @@ bin
 ]
 ---
 
-# Binning plot
+# Binning
 .pull-left[
 ```{r}
 summary(bin)
 ```
 ]
-
+--
 .pull-right[
 ```{r, fig.height = 5, fig.width=6}
 plot(bin)
@@ -465,7 +486,7 @@ plot(bin)
 
 pre {
   max-width: 600px;
-  max-height: 300px;
+  max-height: 200px;
   overflow-x: auto;
   overflow-y: scroll;
   font-weight: 300;

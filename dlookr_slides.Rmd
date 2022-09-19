@@ -72,17 +72,16 @@ background-size: cover
   - Exploration
   
   - Transformation
-  
----
 
+--
 
-# Advantages of dlookr
+- What are the advantages of dlookr?
 
-- Seamless integration with `dplyr`
+  - Seamless integration with `dplyr`
 
-- Use of `plot` and `summary` functions to quickly view diagnostic data
+  - Use of `plot` and `summary` functions to quickly view diagnostic data
 
-- Simple and powerful commands
+  - Simple and powerful commands
   
 ---
 
@@ -110,6 +109,7 @@ background-size: cover
 ```{r}
 data("iris")
 
+set.seed(1)
 iris["Sepal.Length"] <- lapply(iris["Sepal.Length"], function(x) {x[sample( c(1:40), floor(40/10))] <- NA; x})
 iris["Species"] <- lapply(iris["Species"], function(x) {x[sample( c(1:35), floor(35/10))] <- NA; x})
 
@@ -121,15 +121,15 @@ iris %>% data.table()
 
 # Diagnose
 .pull-left[
-  - `diagnose` function describes:
+- `diagnose` function describes:
   
-    - the type of each variable
+  - the type of each variable
+  
+  - number & percent of missing data
+  
+  - unique values
     
-    - number & percent of missing data
-    
-    - unique data
-    
-  - Helps with basic data diagnostics: are unique counts what you expect, how much missingness is there, are data types correct
+- Use `diagnose` for quick data diagnostics
 
 ]
 
@@ -167,23 +167,32 @@ iris %>%
 ---
 
 # Diagnose Continuous Variables
+
+.pull-left[
+
+- `diagnose_numeric()` calculates min, max, mean, median, Q1, Q3, number of zeros, negative values, and outliers
+
+
 ```{r}
 diagnose_numeric(iris)
 ```
-
+]
 --
+.pull-right[
+
+- `diagnose_outlier()` identifies the mean of each variable with outliers, without outliers, and the mean of the outliers themselves
+
 ```{r}
 diagnose_outlier(iris)
 ```
 
---
 ```{r}
 diagnose_outlier(iris) %>% 
   filter(outliers_cnt > 0)
 ```
-
+]
 ---
-# Plot Outliers
+# Diagnose Continuous Variables
 ```{r, fig.height = 5.5, fig.width = 8}
 iris %>% 
   plot_outlier(Sepal.Width)
@@ -196,11 +205,11 @@ iris %>%
 
 .pull-left[
 
-- `diagnose_category` is used to assess categorical variables by:
+- `diagnose_category` is used to assess categorical variables
 
-  - Identifying the levels of each categorical variable
-  - Noting the number & percentage of observations at each level
-  - Ranking each level in terms of number of observations
+  - Levels of each categorical variable
+  - Number & percentage of observations at each level
+  - Rank of each level by number of observations
 
 ]
 --
@@ -217,6 +226,27 @@ diagnose_category(iris) %>%
   filter(is.na(levels))
 ```
 ]
+
+---
+
+# Missing Values
+
+.pull-left[
+
+- Use `plot_na_pareto()` to assess the highest quantity of missing values and `plot_na_hclust()` to assess the distribution of missing values
+
+```{r, fig.height=4, fig.width=6}
+iris %>% 
+  plot_na_pareto(only_na = TRUE)
+```
+]
+--
+.pull-right[
+```{r, fig.height=5, fig.width=6}
+plot_na_hclust(iris)
+```
+]
+
 ---
 
 # Describe
@@ -254,6 +284,9 @@ iris %>%
 - Assess normality of continuous variables and plot log and sqrt transformations with `normality` function
 
   - Shapiro-Wilk test is used to generate p-values
+  
+- Plot the results with `plot_normality` to see the result of some basic transformations
+
 
 ```{r}
 normality(iris)
@@ -266,7 +299,9 @@ iris %>%
   plot_normality(Petal.Length)
 ```
 ]
+
 ---
+
 # Correlation
 .pull-left[
 
@@ -439,6 +474,7 @@ find_skewness(iris, value = TRUE)
 find_skewness(iris, value = TRUE, thres = 0.3)
 ```
 ]
+
 ---
 # Binning
 

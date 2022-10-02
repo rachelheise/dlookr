@@ -1,6 +1,6 @@
 ---
 title: "dlookr Package"
-subtitle: "WCM Computing Club - September 22, 2022"
+subtitle: "WCM Computing Club - October 4, 2022"
 author: "Rachel Heise"
 date: "`r Sys.Date()`"
 output:
@@ -59,13 +59,13 @@ background-size: cover
 
 <img src="img/dlookr_hex.png" alt="dlookr-hex-sticker" width="180" />
 
-<h3 style="color: gray;">Rachel Heise | WCM Computing Club | September 22, 2022</h3>
+<h3 style="color: gray;">Rachel Heise | WCM Computing Club | October 4, 2022</h3>
 
 ---
 
 # dlookr
 
-- Package for exploratory data analysis
+- R package for exploratory data analysis
 
   - Data diagnosis
   
@@ -75,9 +75,9 @@ background-size: cover
 
 --
 
-- What are the advantages of dlookr?
+- What are the advantages of `dlookr`?
 
-  - Seamless integration with `dplyr`
+  - `dlookr` functions output dataframes for seamless integration with `dplyr`
 
   - Use of `plot` and `summary` functions to quickly view diagnostic data
 
@@ -102,8 +102,6 @@ background-size: cover
   - Species (categorical, add NA)
     
 ]
-
---
 
 .pull-right[
 ```{r}
@@ -133,7 +131,6 @@ iris %>% data.table()
 
 ]
 
---
 
 .pull-right[
 ```{r}
@@ -212,7 +209,6 @@ iris %>%
   - Rank of each level by number of observations
 
 ]
---
 
 .pull-right[
 ```{r}
@@ -326,11 +322,9 @@ iris %>%
 
 .pull-left[
 
-- Target variables are similar to `group_by()` in `dplyr`
+- Target variables are created using the `target_by()` function and are used to explore the relationship between a categorical variable and other variable values
 
-- Target variables are used to explore the relationship between a categorical variable and other variable values
-
-  - `target_by` function
+  - Target variables are similar to `group_by()` in `dplyr`
 
 ]
 --
@@ -364,7 +358,7 @@ plot(cat_num)
 --
 .pull-right[
 ```{r}
-sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Species, method = "knn")
+sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Petal.Length, method = "knn")
 summary(sepallength_im)
 ```
 ]
@@ -387,7 +381,7 @@ summary(sepallength_im)
 .pull-right[
 
 ```{r, eval=FALSE}
-sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Species, method = "knn")
+sepallength_im <- imputate_na(iris, Sepal.Length, yvar = Petal.Length, method = "knn")
 ```
 
 
@@ -405,8 +399,7 @@ plot(sepallength_im)
   - Multivariate Imputation by Chained Equations (mice)
 
 ```{r, results=FALSE}
-library(mice)
-species_im <- imputate_na(iris, Species, method = "mice")
+species_im <- imputate_na(iris, Species, method = "rpart")
 ```
 
 ```{r}
@@ -454,7 +447,7 @@ plot(iris_outliers)
 
 --
 .pull-right[
-```{r, warning=FALSE, fig.width=6, fig.height=4}
+```{r, warning=FALSE, fig.width=8, fig.height=4}
 iris_t <- transform(iris$Sepal.Length, method = "minmax")
 
 plot(iris_t)
@@ -485,9 +478,9 @@ find_skewness(iris, value = TRUE, thres = 0.3)
 
   - quantile
   - equal
-  - pretty (?)
+  - pretty (Computes equally spaced ‘round’ values that are 1, 2 or 5 times a power of 10)
   - kmeans
-  - bclust
+  - bclust (bagged clustering)
 ]
 
 --
@@ -509,12 +502,16 @@ bin
 summary(bin)
 ```
 ]
---
+
 .pull-right[
 ```{r, fig.height = 5, fig.width=6}
 plot(bin)
 ```
 ]
+
+---
+
+# Questions?
 
 
 ```{css, eval = TRUE, echo = FALSE}
